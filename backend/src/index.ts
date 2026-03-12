@@ -84,6 +84,58 @@ app.get("/dev/cache-verify", (_req, res) => {
   });
 });
 
+// --- Step 5: REST API routes (require cache loaded) ---
+function requireCache(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  if (!isCacheLoaded()) {
+    res.status(503).json({ error: "Cache not loaded yet" });
+    return;
+  }
+  next();
+}
+
+const DEFAULT_LATEST_LIMIT = 100;
+const MAX_LATEST_LIMIT = 500;
+
+/** GET /api/matches/latest?limit=100 — latest N matches (default 100, max 500). */
+app.get("/api/matches/latest", requireCache, (req, res) => {
+  const raw = parseInt(req.query.limit as string, 10);
+  const limit = Number.isFinite(raw) ? Math.min(MAX_LATEST_LIMIT, Math.max(1, raw)) : DEFAULT_LATEST_LIMIT;
+  res.json({ matches: getLatest(limit) });
+});
+
+/** GET /api/matches?date=YYYY-MM-DD — matches on that date. */
+/** GET /api/matches?player=Name — matches where player name contains "Name". */
+app.get("/api/matches", requireCache, (req, res) => {
+  const date = typeof req.query.date === "string" ? req.query.date.trim() : "";
+  const player = typeof req.query.player === "string" ? req.query.player.trim() : "";
+  if (date) {
+    return res.json({ matches: getByDate(date) });
+  }
+  if (player) {
+    return res.json({ matches: getByPlayer(player) });
+  }
+  res.status(400).json({ error: "Provide query: date=YYYY-MM-DD or player=Name" });
+});
+
+/** GET /api/leaderboard/today — today's leaderboard (wins today). */
+app.get("/api/leaderboard/today", requireCache, (_req, res) => {
+  const today = new Date().toISOString().slice(0, 10);
+  res.json({ leaderboard: getLeaderboardForDateRange(today, today) });
+});
+
+/** GET /api/leaderboard?from=YYYY-MM-DD&to=YYYY-MM-DD — historical leaderboard. */
+app.get("/api/leaderboard", requireCache, (req, res) => {
+  const from = typeof req.query.from === "string" ? req.query.from.trim() : "";
+  const to = typeof req.query.to === "string" ? req.query.to.trim() : "";
+  if (!from || !to) {
+    return res.status(400).json({ error: "Provide query: from=YYYY-MM-DD&to=YYYY-MM-DD" });
+  }
+  if (from > to) {
+    return res.status(400).json({ error: "from must be <= to" });
+  }
+  res.json({ leaderboard: getLeaderboardForDateRange(from, to) });
+});
+
 async function start(): Promise<void> {
   try {
     await loadHistory(CACHE_MAX_PAGES);
