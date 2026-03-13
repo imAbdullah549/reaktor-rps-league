@@ -2,19 +2,35 @@
 
 Assignment: consume the BAD API and present RPS match results and leaderboards.
 
-**Current state:** Documentation only. Implementation will be done **step by step** after review.
+---
+
+## Run the app
+
+**Backend** (API + cache, proxies to BAD API):
+
+```bash
+cd backend && npm install && npm start
+```
+
+Runs at `http://localhost:3001`.
+
+**Frontend** (React + Vite):
+
+```bash
+cd frontend && npm install && npm run dev
+```
+
+Runs at `http://localhost:5173`. API requests to `/api` are proxied to the backend in development.
+
+---
+
+## Stack
+
+- **Backend:** Node, Express, TypeScript. In-memory cache, BAD API client.
+- **Frontend:** React, TypeScript, Vite, React Router, Tailwind CSS, shadcn/ui.
 
 ---
 
 ## Documentation
 
-All docs are in **`docs/`**:
-
-| Document | Purpose |
-|----------|--------|
-| [docs/README.md](docs/README.md) | Index of all documentation |
-| [docs/ARCHITECTURE_AND_IMPLEMENTATION.md](docs/ARCHITECTURE_AND_IMPLEMENTATION.md) | Architecture, tech choices, features, system diagram |
-| [docs/API_REFERENCE.md](docs/API_REFERENCE.md) | BAD API endpoints and response shape (from live call) |
-| [docs/STEP_BY_STEP_PLAN.md](docs/STEP_BY_STEP_PLAN.md) | **Step-by-step implementation plan (no code)** — review this first |
-
-**Next:** Review the step-by-step plan. When ready, we implement one step at a time.
+Details (architecture, API reference, step-by-step plan) are in **`docs/`** — see [docs/README.md](docs/README.md).
