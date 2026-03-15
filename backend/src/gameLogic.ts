@@ -3,9 +3,9 @@
  * Four outcomes: A, B, draw, invalid (invalid = at least one move not ROCK/PAPER/SCISSORS).
  */
 
-import type { BadApiGameResult, InvalidMove, NormalizedMatch, Winner } from './types';
+import type { BadApiGameResult, InvalidMove, NormalizedMatch, Winner } from "./types";
 
-const VALID_MOVES = ['ROCK', 'PAPER', 'SCISSORS'] as const;
+const VALID_MOVES = ["ROCK", "PAPER", "SCISSORS"] as const;
 
 function normalizeMove(m: string): string {
   return String(m).trim().toUpperCase();
@@ -22,8 +22,8 @@ export function getInvalidMove(moveA: string, moveB: string): InvalidMove | unde
   const aValid = isValidMove(moveA);
   const bValid = isValidMove(moveB);
   if (aValid && bValid) return undefined;
-  if (!aValid && !bValid) return 'both';
-  return aValid ? 'B' : 'A';
+  if (!aValid && !bValid) return "both";
+  return aValid ? "B" : "A";
 }
 
 /**
@@ -31,17 +31,17 @@ export function getInvalidMove(moveA: string, moveB: string): InvalidMove | unde
  * Invalid when at least one move is not ROCK/PAPER/SCISSORS.
  */
 export function getWinner(moveA: string, moveB: string): Winner {
-  if (!isValidMove(moveA) || !isValidMove(moveB)) return 'invalid';
+  if (!isValidMove(moveA) || !isValidMove(moveB)) return "invalid";
   const a = normalizeMove(moveA);
   const b = normalizeMove(moveB);
-  if (a === b) return 'draw';
-  if (a === 'ROCK' && b === 'SCISSORS') return 'A';
-  if (a === 'ROCK' && b === 'PAPER') return 'B';
-  if (a === 'PAPER' && b === 'ROCK') return 'A';
-  if (a === 'PAPER' && b === 'SCISSORS') return 'B';
-  if (a === 'SCISSORS' && b === 'PAPER') return 'A';
-  if (a === 'SCISSORS' && b === 'ROCK') return 'B';
-  return 'invalid';
+  if (a === b) return "draw";
+  if (a === "ROCK" && b === "SCISSORS") return "A";
+  if (a === "ROCK" && b === "PAPER") return "B";
+  if (a === "PAPER" && b === "ROCK") return "A";
+  if (a === "PAPER" && b === "SCISSORS") return "B";
+  if (a === "SCISSORS" && b === "PAPER") return "A";
+  if (a === "SCISSORS" && b === "ROCK") return "B";
+  return "invalid";
 }
 
 function formatDate(ts: number): string {
@@ -55,7 +55,7 @@ export function normalizeGameResult(raw: BadApiGameResult): NormalizedMatch {
   const moveA = raw.playerA.played;
   const moveB = raw.playerB.played;
   const winner = getWinner(moveA, moveB);
-  const invalidMove = winner === 'invalid' ? getInvalidMove(moveA, moveB) : undefined;
+  const invalidMove = winner === "invalid" ? getInvalidMove(moveA, moveB) : undefined;
 
   return {
     gameId: raw.gameId,
