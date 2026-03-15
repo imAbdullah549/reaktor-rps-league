@@ -5,8 +5,19 @@ import morgan from "morgan";
 import { streamLive } from "./badApi";
 import { normalizeGameResult } from "./gameLogic";
 import { loadAllHistoryIncremental, loadHistoryIncremental, addMatch, getCacheSize } from "./cache";
-import { PORT, CACHE_MAX_PAGES, getCorsOrigin, SHUTDOWN_GRACE_MS } from "./config";
+import { PORT, CACHE_MAX_PAGES, getCorsOrigin, SHUTDOWN_GRACE_MS, isProduction } from "./config";
 import { registerRoutes } from "./routes";
+
+// Fail fast in production if BAD API token is missing (e.g. Railway Variables not set)
+if (isProduction) {
+  const token = process.env.BEARER_TOKEN?.trim();
+  if (!token) {
+    console.error(
+      "BEARER_TOKEN is not set. In Railway: open your service → Variables → add BEARER_TOKEN with your BAD API token."
+    );
+    process.exit(1);
+  }
+}
 
 const app = express();
 app.use(morgan("combined"));
