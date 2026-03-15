@@ -6,7 +6,9 @@ import type {
   MatchesResponse,
 } from "@/types/api";
 
-const API_BASE = "/api";
+/** In dev we use /api (Vite proxy). On Vercel set VITE_API_URL to your Railway backend URL + /api (e.g. https://reaktor-rps-league.up.railway.app/api). */
+const API_BASE =
+  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") || "/api";
 
 async function request<T>(url: string): Promise<T> {
   const res = await fetch(url);
