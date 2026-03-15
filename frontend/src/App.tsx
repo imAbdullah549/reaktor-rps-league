@@ -4,6 +4,7 @@ import { RecentMatchesPage } from "@/pages/RecentMatchesPage";
 import { MatchesPage } from "@/pages/MatchesPage";
 import { TodayStandingsPage } from "@/pages/TodayStandingsPage";
 import { PastStandingsPage } from "@/pages/PastStandingsPage";
+import { NotFoundPage } from "@/pages/NotFoundPage";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="matches" element={<MatchesPage />} />
         <Route path="leaderboard/today" element={<TodayStandingsPage />} />
         <Route path="leaderboard/historical" element={<PastStandingsPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );
