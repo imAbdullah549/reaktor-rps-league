@@ -51,10 +51,7 @@ export function PastStandingsPage() {
     setLimit: setLeaderboardPageSize,
   } = useSearchParamsPagination();
 
-  const timezone = useMemo(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
-    []
-  );
+  const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
   const range = useMemo(() => queryRange(filters), [filters]);
   const active = hasActiveFilter(filters) && range !== null;
 

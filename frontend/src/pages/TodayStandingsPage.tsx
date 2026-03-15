@@ -21,10 +21,7 @@ type TodayLeaderboardKey = readonly [string, string, string, number, number];
 
 export function TodayStandingsPage() {
   const today = useMemo(() => getLocalToday(), []);
-  const timezone = useMemo(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
-    []
-  );
+  const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
   const { page, limit, offset, setPage, setLimit } = useSearchParamsPagination();
 
   const swrKey = useMemo<TodayLeaderboardKey>(

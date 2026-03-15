@@ -47,10 +47,7 @@ export function MatchesPage() {
   });
   const { page, limit, offset, setPage, setLimit } = useSearchParamsPagination();
 
-  const timezone = useMemo(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone,
-    []
-  );
+  const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
 
   const queryArgs = useMemo<MatchesQueryArgs>(
     () => ({
