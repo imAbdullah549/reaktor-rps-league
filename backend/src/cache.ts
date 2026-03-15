@@ -2,6 +2,10 @@
  * In-memory cache of normalized matches. Load from BAD API on startup; expose getters and leaderboard.
  * Maintains a date index for fast by-date and date-range queries.
  * Supports incremental load: server can be up while history is fetched page-by-page.
+ *
+ * Ordering: We sort at read time (in getMatchesFiltered and getMatchesByDateRange) so results are
+ * always newest-first. We do not maintain date order in the cache on every write (e.g. addMatch),
+ * so order stays correct regardless of bulk load, incremental load, or live stream adds.
  */
 
 import dayjs from "dayjs";
@@ -207,11 +211,17 @@ export function getLatest(limit: number): NormalizedMatch[] {
 
 /**
  * Returns matches with date in [from, to] (inclusive). Dates are YYYY-MM-DD. Uses date index.
+ * Returns newest first: dates iterated descending, each date's list is already newest-first.
  */
 export function getMatchesByDateRange(from: string, to: string): NormalizedMatch[] {
   const result: NormalizedMatch[] = [];
-  for (const [date, list] of byDateIndex) {
-    if (date >= from && date <= to) result.push(...list);
+  const datesInRange: string[] = [];
+  for (const [date] of byDateIndex) {
+    if (date >= from && date <= to) datesInRange.push(date);
+  }
+  datesInRange.sort((a, b) => b.localeCompare(a)); // newest date first
+  for (const date of datesInRange) {
+    result.push(...(byDateIndex.get(date) ?? []));
   }
   return result;
 }
@@ -251,7 +261,7 @@ export interface MatchesFilter {
 
 /**
  * Returns matches matching all given filters (date or from+to, optionally player). Combined filters supported.
- * Result is sorted newest first. Use with limit/offset for pagination.
+ * Result is sorted newest first (by time descending). Use with limit/offset for pagination.
  */
 export function getMatchesFiltered(filter: MatchesFilter): NormalizedMatch[] {
   let list: NormalizedMatch[];
@@ -273,6 +283,8 @@ export function getMatchesFiltered(filter: MatchesFilter): NormalizedMatch[] {
       (m) => m.playerA.toLowerCase().includes(q) || m.playerB.toLowerCase().includes(q)
     );
   }
+  // Sort at read time: guarantee newest-first (UTC time) regardless of cache build or live-add order
+  list.sort((a, b) => b.time - a.time);
   return list;
 }
 
