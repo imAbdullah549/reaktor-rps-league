@@ -1,152 +1,70 @@
+import "./loadEnv";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
-import { fetchHistoryPage } from "./badApi";
+import morgan from "morgan";
+import { streamLive } from "./badApi";
 import { normalizeGameResult } from "./gameLogic";
 import {
-  loadHistory,
-  isCacheLoaded,
+  loadAllHistoryIncremental,
+  loadHistoryIncremental,
+  addMatch,
   getCacheSize,
-  getLatest,
-  getByDate,
-  getByPlayer,
-  getLeaderboardForDateRange,
 } from "./cache";
-
-dotenv.config();
-
-const PORT = process.env.PORT ?? 3001;
-const CACHE_MAX_PAGES = (() => {
-  const n = parseInt(process.env.CACHE_MAX_PAGES ?? '30', 10);
-  if (!Number.isFinite(n)) return 30;
-  return Math.min(100, Math.max(1, n));
-})();
+import { PORT, CACHE_MAX_PAGES, getCorsOrigin, SHUTDOWN_GRACE_MS } from "./config";
+import { registerRoutes } from "./routes";
 
 const app = express();
-
-app.use(cors());
+app.use(morgan("combined"));
+app.use(cors({ origin: getCorsOrigin() }));
 app.use(express.json());
 
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
-});
+registerRoutes(app);
 
-/** Temporary route to verify BAD API client (Step 2). Remove or replace in later steps. */
-app.get("/dev/fetch-history", async (_req, res) => {
-  try {
-    const page = await fetchHistoryPage();
-    res.json({
-      message: "First page from BAD API /history",
-      dataLength: page.data.length,
-      hasNextCursor: Boolean(page.cursor),
-      data: page.data,
-      cursor: page.cursor,
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
-  }
-});
-
-/** Temporary route to verify game logic (Step 3): fetch first page, normalize first game, return it. */
-app.get("/dev/normalize-first", async (_req, res) => {
-  try {
-    const page = await fetchHistoryPage();
-    const first = page.data[0];
-    if (!first) {
-      return res.json({ message: "No games in first page", normalized: null });
-    }
-    const normalized = normalizeGameResult(first);
-    res.json({
-      message: "First game normalized (Step 3)",
-      raw: first,
-      normalized,
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ error: message });
-  }
-});
-
-/** Temporary route to verify cache (Step 4): stats, latest, by date, by player, leaderboard today. */
-app.get("/dev/cache-verify", (_req, res) => {
-  if (!isCacheLoaded()) {
-    return res.status(503).json({ error: "Cache not loaded yet" });
-  }
-  const today = new Date().toISOString().slice(0, 10);
-  res.json({
-    message: "Cache verification (Step 4)",
-    totalMatches: getCacheSize(),
-    latest5: getLatest(5),
-    byDateSample: getByDate(today).length,
-    byPlayerSample: getByPlayer("Kim").length,
-    leaderboardToday: getLeaderboardForDateRange(today, today).slice(0, 10),
-  });
-});
-
-// --- Step 5: REST API routes (require cache loaded) ---
-function requireCache(req: express.Request, res: express.Response, next: express.NextFunction): void {
-  if (!isCacheLoaded()) {
-    res.status(503).json({ error: "Cache not loaded yet" });
-    return;
-  }
-  next();
-}
-
-const DEFAULT_LATEST_LIMIT = 100;
-const MAX_LATEST_LIMIT = 500;
-
-/** GET /api/matches/latest?limit=100 — latest N matches (default 100, max 500). */
-app.get("/api/matches/latest", requireCache, (req, res) => {
-  const raw = parseInt(req.query.limit as string, 10);
-  const limit = Number.isFinite(raw) ? Math.min(MAX_LATEST_LIMIT, Math.max(1, raw)) : DEFAULT_LATEST_LIMIT;
-  res.json({ matches: getLatest(limit) });
-});
-
-/** GET /api/matches?date=YYYY-MM-DD — matches on that date. */
-/** GET /api/matches?player=Name — matches where player name contains "Name". */
-app.get("/api/matches", requireCache, (req, res) => {
-  const date = typeof req.query.date === "string" ? req.query.date.trim() : "";
-  const player = typeof req.query.player === "string" ? req.query.player.trim() : "";
-  if (date) {
-    return res.json({ matches: getByDate(date) });
-  }
-  if (player) {
-    return res.json({ matches: getByPlayer(player) });
-  }
-  res.status(400).json({ error: "Provide query: date=YYYY-MM-DD or player=Name" });
-});
-
-/** GET /api/leaderboard/today — today's leaderboard (wins today). */
-app.get("/api/leaderboard/today", requireCache, (_req, res) => {
-  const today = new Date().toISOString().slice(0, 10);
-  res.json({ leaderboard: getLeaderboardForDateRange(today, today) });
-});
-
-/** GET /api/leaderboard?from=YYYY-MM-DD&to=YYYY-MM-DD — historical leaderboard. */
-app.get("/api/leaderboard", requireCache, (req, res) => {
-  const from = typeof req.query.from === "string" ? req.query.from.trim() : "";
-  const to = typeof req.query.to === "string" ? req.query.to.trim() : "";
-  if (!from || !to) {
-    return res.status(400).json({ error: "Provide query: from=YYYY-MM-DD&to=YYYY-MM-DD" });
-  }
-  if (from > to) {
-    return res.status(400).json({ error: "from must be <= to" });
-  }
-  res.json({ leaderboard: getLeaderboardForDateRange(from, to) });
-});
-
-async function start(): Promise<void> {
-  try {
-    await loadHistory(CACHE_MAX_PAGES);
-    console.log(`Cache loaded: ${getCacheSize()} matches (${CACHE_MAX_PAGES} pages)`);
-  } catch (err) {
-    console.error("Cache load failed. Check BEARER_TOKEN and network. Server will not start.", err);
-    throw err;
-  }
-  app.listen(PORT, () => {
+function start(): void {
+  const server = app.listen(PORT, () => {
     console.log(`RPS League backend running at http://localhost:${PORT}`);
   });
+
+  function gracefulShutdown(signal: string): void {
+    console.log(`${signal} received. Closing server (grace period ${SHUTDOWN_GRACE_MS}ms)...`);
+    server.close(() => {
+      console.log("Server closed. Exiting.");
+      process.exit(0);
+    });
+    setTimeout(() => {
+      console.error("Grace period expired. Forcing exit.");
+      process.exit(1);
+    }, SHUTDOWN_GRACE_MS);
+  }
+
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+  void streamLive((game) => {
+    try {
+      const m = normalizeGameResult(game);
+      if (addMatch(m)) {
+        console.log(`Live: added match ${m.gameId} (${m.playerA} vs ${m.playerB})`);
+      }
+    } catch (e) {
+      console.error("Live: normalize error", e);
+    }
+  });
+  console.log("Live stream started (GET /live). New games will be appended to the cache.");
+
+  if (CACHE_MAX_PAGES === 0) {
+    console.log("Loading history from BAD API (all pages) in background — API will serve data as it loads.");
+    void loadAllHistoryIncremental()
+      .then(() => console.log(`Cache load complete: ${getCacheSize()} matches (all pages).`))
+      .catch((err) => console.error("Cache load failed. Check BEARER_TOKEN and network.", err));
+  } else {
+    console.log(
+      `Loading history from BAD API (max ${CACHE_MAX_PAGES} pages) in background — API will serve data as it loads.`
+    );
+    void loadHistoryIncremental(CACHE_MAX_PAGES)
+      .then(() => console.log(`Cache load complete: ${getCacheSize()} matches (${CACHE_MAX_PAGES} pages).`))
+      .catch((err) => console.error("Cache load failed. Check BEARER_TOKEN and network.", err));
+  }
 }
 
 start();

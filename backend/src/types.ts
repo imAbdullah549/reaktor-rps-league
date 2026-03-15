@@ -5,7 +5,7 @@
 
 /** One game result from GET /history (and from GET /live SSE). */
 export interface BadApiGameResult {
-  type: 'GAME_RESULT';
+  type: "GAME_RESULT";
   gameId: string;
   time: number; // Unix timestamp, milliseconds
   playerA: { name: string; played: string };
@@ -19,10 +19,10 @@ export interface BadApiHistoryResponse {
 }
 
 /** Game outcome. "invalid" when at least one move is not ROCK/PAPER/SCISSORS so draw stats stay clean. */
-export type Winner = 'A' | 'B' | 'draw' | 'invalid';
+export type Winner = "A" | "B" | "draw" | "invalid";
 
 /** Who had the invalid move; only set when winner is "invalid". */
-export type InvalidMove = 'A' | 'B' | 'both';
+export type InvalidMove = "A" | "B" | "both";
 
 /** Normalized match after computing winner and date (used by cache and API). */
 export interface NormalizedMatch {
