@@ -33,8 +33,7 @@ function parseLimitOffset(req: Request): { limit: number; offset: number } {
 
 /** GET /api/matches/latest — latest N matches. */
 export function matchesLatest(req: Request, res: Response): void {
-  const raw =
-    typeof req.query.limit === "string" ? parseInt(req.query.limit, 10) : NaN;
+  const raw = typeof req.query.limit === "string" ? parseInt(req.query.limit, 10) : NaN;
   const limit = Number.isFinite(raw)
     ? Math.min(MAX_LATEST_LIMIT, Math.max(1, raw))
     : DEFAULT_LATEST_LIMIT;
@@ -84,10 +83,9 @@ export function leaderboardToday(req: Request, res: Response): void {
   const player = typeof req.query.player === "string" ? req.query.player.trim().toLowerCase() : "";
   const { limit, offset } = parseLimitOffset(req);
 
-  let full =
-    timezone
-      ? getLeaderboardForLocalDay(today, timezone)
-      : getLeaderboardForDateRange(today, today);
+  let full = timezone
+    ? getLeaderboardForLocalDay(today, timezone)
+    : getLeaderboardForDateRange(today, today);
   if (player) {
     full = full.filter((e) => e.player.toLowerCase().includes(player));
   }

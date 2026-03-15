@@ -4,12 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { streamLive } from "./badApi";
 import { normalizeGameResult } from "./gameLogic";
-import {
-  loadAllHistoryIncremental,
-  loadHistoryIncremental,
-  addMatch,
-  getCacheSize,
-} from "./cache";
+import { loadAllHistoryIncremental, loadHistoryIncremental, addMatch, getCacheSize } from "./cache";
 import { PORT, CACHE_MAX_PAGES, getCorsOrigin, SHUTDOWN_GRACE_MS } from "./config";
 import { registerRoutes } from "./routes";
 
@@ -53,7 +48,9 @@ function start(): void {
   console.log("Live stream started (GET /live). New games will be appended to the cache.");
 
   if (CACHE_MAX_PAGES === 0) {
-    console.log("Loading history from BAD API (all pages) in background — API will serve data as it loads.");
+    console.log(
+      "Loading history from BAD API (all pages) in background — API will serve data as it loads."
+    );
     void loadAllHistoryIncremental()
       .then(() => console.log(`Cache load complete: ${getCacheSize()} matches (all pages).`))
       .catch((err) => console.error("Cache load failed. Check BEARER_TOKEN and network.", err));
@@ -62,7 +59,9 @@ function start(): void {
       `Loading history from BAD API (max ${CACHE_MAX_PAGES} pages) in background — API will serve data as it loads.`
     );
     void loadHistoryIncremental(CACHE_MAX_PAGES)
-      .then(() => console.log(`Cache load complete: ${getCacheSize()} matches (${CACHE_MAX_PAGES} pages).`))
+      .then(() =>
+        console.log(`Cache load complete: ${getCacheSize()} matches (${CACHE_MAX_PAGES} pages).`)
+      )
       .catch((err) => console.error("Cache load failed. Check BEARER_TOKEN and network.", err));
   }
 }

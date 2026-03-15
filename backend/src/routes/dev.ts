@@ -12,10 +12,7 @@ import {
 import { sendError } from "../utils/sendError";
 
 /** GET /dev/fetch-history — first page from BAD API. */
-export async function fetchHistory(
-  _req: Request,
-  res: Response
-): Promise<void> {
+export async function fetchHistory(_req: Request, res: Response): Promise<void> {
   try {
     const page = await fetchHistoryPage();
     res.json({
@@ -56,10 +53,7 @@ export async function fetchHistoryPageByCursor(req: Request, res: Response): Pro
 }
 
 /** GET /dev/normalize-first — first game normalized. */
-export async function normalizeFirst(
-  _req: Request,
-  res: Response
-): Promise<void> {
+export async function normalizeFirst(_req: Request, res: Response): Promise<void> {
   try {
     const page = await fetchHistoryPage();
     const first = page.data[0];

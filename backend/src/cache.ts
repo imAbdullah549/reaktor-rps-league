@@ -31,8 +31,7 @@ function localDayToUtcRange(
   try {
     const start = dayjs.tz(`${s} 00:00:00`, tz);
     const end = dayjs.tz(`${s} 23:59:59.999`, tz);
-    if (start.isValid() && end.isValid())
-      return { startMs: start.valueOf(), endMs: end.valueOf() };
+    if (start.isValid() && end.isValid()) return { startMs: start.valueOf(), endMs: end.valueOf() };
   } catch {
     return null;
   }
@@ -56,8 +55,7 @@ function localDateRangeToUtc(
   try {
     const start = dayjs.tz(`${from} 00:00:00`, tz);
     const end = dayjs.tz(`${to} 23:59:59.999`, tz);
-    if (start.isValid() && end.isValid())
-      return { startMs: start.valueOf(), endMs: end.valueOf() };
+    if (start.isValid() && end.isValid()) return { startMs: start.valueOf(), endMs: end.valueOf() };
   } catch {
     return null;
   }

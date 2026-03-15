@@ -11,7 +11,10 @@ export function getCorsOrigin(): string | string[] | true {
   if (!isProduction) return true;
   const o = process.env.FRONTEND_ORIGIN?.trim();
   if (!o) return true;
-  const origins = o.split(",").map((s) => s.trim()).filter(Boolean);
+  const origins = o
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
   return origins.length > 0 ? origins : true;
 }
 
