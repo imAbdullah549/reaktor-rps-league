@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import useSWR from "swr";
 import type { LeaderboardPaginatedResponse, MatchesPaginatedResponse } from "@/types/api";
 import { ERROR_MESSAGES, SWR_CONFIG } from "@/lib/constants";
+import { getAppTimezone } from "@/lib/timezone";
 import { useMatchesFiltersSearchParams, useSearchParamsPagination } from "@/hooks";
 import { fetchLeaderboardHistorical, fetchMatches } from "@/api/client";
 import { PageHeader, PageShell } from "@/components/Page";
@@ -51,7 +52,7 @@ export function PastStandingsPage() {
     setLimit: setLeaderboardPageSize,
   } = useSearchParamsPagination();
 
-  const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
+  const timezone = useMemo(() => getAppTimezone(), []);
   const range = useMemo(() => queryRange(filters), [filters]);
   const active = hasActiveFilter(filters) && range !== null;
 

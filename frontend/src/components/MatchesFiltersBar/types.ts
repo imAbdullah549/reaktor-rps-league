@@ -1,4 +1,4 @@
-import { format, subDays } from "date-fns";
+import { getAppToday, getAppDaysAgo } from "@/lib/timezone";
 
 export type MatchesFiltersValue = {
   date?: string;
@@ -7,17 +7,16 @@ export type MatchesFiltersValue = {
   player?: string;
 };
 
-/** Default filters: today's date (no player). Use for Matches page. */
+/** Default filters: today's date (no player). Use for Matches page. Respects UTC when VITE_USE_UTC is set. */
 export function getDefaultMatchesFilters(): MatchesFiltersValue {
-  return { date: format(new Date(), "yyyy-MM-dd") };
+  return { date: getAppToday() };
 }
 
-/** Default filters: last 7 days range (no player). Use for Past standings page. */
+/** Default filters: last 7 days range (no player). Use for Past standings page. Respects UTC when VITE_USE_UTC is set. */
 export function getDefaultPastStandingsFilters(): MatchesFiltersValue {
-  const today = new Date();
   return {
-    from: format(subDays(today, 6), "yyyy-MM-dd"),
-    to: format(today, "yyyy-MM-dd"),
+    from: getAppDaysAgo(6),
+    to: getAppToday(),
   };
 }
 

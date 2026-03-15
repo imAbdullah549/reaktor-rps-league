@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import useSWR from "swr";
 import type { LeaderboardPaginatedResponse } from "@/types/api";
 import { ERROR_MESSAGES, SWR_CONFIG_WITH_REFRESH } from "@/lib/constants";
+import { getAppTimezone, getAppToday } from "@/lib/timezone";
 import { useSearchParamsPagination } from "@/hooks";
 import { fetchLeaderboardToday } from "@/api/client";
 import { DataTable } from "@/components/DataTable";
@@ -12,16 +13,11 @@ import { ErrorMessage } from "@/components/ErrorMessage";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHeader, PageShell } from "@/components/Page";
 
-function getLocalToday(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
 type TodayLeaderboardKey = readonly [string, string, string, number, number];
 
 export function TodayStandingsPage() {
-  const today = useMemo(() => getLocalToday(), []);
-  const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
+  const today = useMemo(() => getAppToday(), []);
+  const timezone = useMemo(() => getAppTimezone(), []);
   const { page, limit, offset, setPage, setLimit } = useSearchParamsPagination();
 
   const swrKey = useMemo<TodayLeaderboardKey>(

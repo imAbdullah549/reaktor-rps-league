@@ -2,6 +2,7 @@ import { useCallback, useMemo } from "react";
 import useSWR from "swr";
 import type { MatchesPaginatedResponse, MatchesQueryParams } from "@/types/api";
 import { ERROR_MESSAGES, SWR_CONFIG } from "@/lib/constants";
+import { getAppTimezone } from "@/lib/timezone";
 import { useMatchesFiltersSearchParams, useSearchParamsPagination } from "@/hooks";
 import { fetchMatches } from "@/api/client";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -47,7 +48,7 @@ export function MatchesPage() {
   });
   const { page, limit, offset, setPage, setLimit } = useSearchParamsPagination();
 
-  const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
+  const timezone = useMemo(() => getAppTimezone(), []);
 
   const queryArgs = useMemo<MatchesQueryArgs>(
     () => ({
