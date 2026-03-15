@@ -52,7 +52,7 @@ export async function fetchHistoryPage(cursor?: string): Promise<BadApiHistoryRe
         if (Number.isFinite(sec)) waitMs = sec * 1000;
       }
       waitMs = Math.min(waitMs * Math.pow(2, attempt), 60000);
-      lastError = new Error(`BAD API error: 429 Too Many Requests`);
+      lastError = new Error("BAD API error: 429 Too Many Requests");
 
       if (attempt < maxRetries) {
         console.warn(
